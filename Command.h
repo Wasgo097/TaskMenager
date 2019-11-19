@@ -6,7 +6,7 @@
 typedef std::string string;
 class Mainwindow;
 class Command{
-	//std::shared_ptr<Mainwindow> window;
+	std::shared_ptr<Mainwindow> window;
 	string _command;
 	void help(string temp) {
 		if (temp == "show") 
@@ -27,7 +27,7 @@ class Command{
 			if (temp == "process") {
 
 			}
-			else if (temp == "cpur") {
+			else if (temp == "cpu") {
 
 			}
 			else if (temp == "memory") {
@@ -38,13 +38,14 @@ class Command{
 			}
 		}
 		else if (temp == "weather" && (!city.empty())) {
-
+			std::cout << "Pogoda w " + city + " jest idealna, nie za cieplo, nie za zimno, tak w sam raz";
 		}
 		else {
 			std::cout << "Nieznana komenda, uzyj help show";
 		}
 	}
 	void kill(string id) {
+
 	}
 	void clear() {system("cls");}
 public:
