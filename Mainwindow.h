@@ -5,14 +5,24 @@
 #include "common.h"
 #include <thread>
 #include <chrono>
+#include <atomic>
 #include <string>
 #include <memory>
-#include <mutex>
 #include <iostream>
+#include <winsock2.h>
+#include <Windows.h>
+#include <iphlpapi.h>
+#include <map>
 typedef std::string string;
+typedef unsigned long size;
+typedef double real;
+typedef unsigned int amount;
+#define win_nl(T, y) std::unique_ptr<T> y{ new T() }; //wskaŸnik do struktury    dodane
+#define win_ptr(T, y) win_nl(T, y) y->dwLength = sizeof(T);  //rozmiar           dodane
 class Mainwindow{
 	std::shared_ptr<sf::RenderWindow> _window;
 	std::shared_ptr<Command> _command;
+	std::shared_ptr<Weather> weather;
 	sf::Vector2f _size;
 	sf::Color _backgroud_color;
 	sf::RectangleShape _background;
@@ -21,49 +31,76 @@ class Mainwindow{
 	Flag _flag = Flag::null;
 	string _city;
 	std::thread * _cmd_thr = nullptr;
-	std::mutex _mtx;
+	bool _change=true;
+	static ULONGLONG __substract_time(const FILETIME one, const FILETIME two)      //dodane
+	{
+		LARGE_INTEGER a, b;
+		a.LowPart = one.dwLowDateTime;
+		a.HighPart = one.dwHighDateTime;
+
+		b.LowPart = two.dwLowDateTime;
+		b.HighPart = two.dwHighDateTime;
+
+		return a.QuadPart - b.QuadPart;
+	}
+	///clear from </span and space from begining
+	void clear_string(string * str);
+	void remove_space(string * str);
 public:
-	Mainwindow(/*std::mutex * mt,*/ sf::Vector2f size) :_size{ size }, _backgroud_color{ sf::Color::Black }/*, mtx{ mt }*/{
-		if (!_main_font.loadFromFile("Font.ttf")) {
-			std::cout << "Error with font";
-			std::cin.ignore(1);
-			exit(-1);
-		}
-		else {
-			_window = std::make_shared<sf::RenderWindow>(sf::VideoMode(_size.x, _size.y), "Task Menager");
-			_command = std::make_shared<Command>(this,&_mtx);
-			_background.setFillColor(_backgroud_color);
-			_background.setPosition(0, 0);
-			_background.setSize(_size);
-			_main_text.setFillColor(sf::Color::White);
-			_main_text.setFont(_main_font);
-		}
-	}
-	Mainwindow(/*std::mutex * mt,*/ int x = 500, int y = 500) : _backgroud_color{ sf::Color::Black }/*, mtx{ mt }*/ {
-		if (!_main_font.loadFromFile("Font.ttf")) {
-			std::cout << "Error with font";
-			std::cin.ignore(1);
-			exit(-1);
-		}
-		else {
-			_size.x = x;
-			_size.y = y;
-			_window = std::make_shared<sf::RenderWindow>(sf::VideoMode(_size.x, _size.y), "Task Menager");
-			_command = std::make_shared<Command>(this,&_mtx);
-			_background.setFillColor(_backgroud_color);
-			_background.setPosition(0, 0);
-			_background.setSize(sf::Vector2f(_size));
-			_main_text.setFillColor(sf::Color::White);
-			_main_text.setFont(_main_font);
-		}
-	}
+	Mainwindow(sf::Vector2f size);
+	Mainwindow(int x = 500, int y = 500);
 	~Mainwindow();
 	void run();
 	void draw_process();
+	void Create_weather_string();
 	void draw_weather();
 	void draw_memory();
 	void draw_cpu();
 	bool is_open();
 	void set_flag(Flag f);
 	void set_city(string city);
+	static size get_physical_memory()                //dodane
+	{
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->ullTotalPhys);   //zapytaæ siê
+	}
+	static real get_physical_memory_usage()          // dodane
+	{
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->dwMemoryLoad) / 100.0;   //zapytaæ siê, dzielenie bo zwroci jako l ca³k. wyswietlanie jako zmienny przecinek
+	}
+	static size get_hz_per_core()    //dodane
+	{
+		win_nl(LARGE_INTEGER, ret);
+		QueryPerformanceFrequency(ret.get());
+		return static_cast<size>(ret->QuadPart); //suma first i second part  
+	}
+	static real cpu_usage()                       //dodane
+	{
+		real ret{ 0.0 }; //bierze aktualne dane, po czasie 
+		FILETIME prevSysIdle, prevSysKernel, prevSysUser;
+		if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
+			return 0;
+		Sleep(15
+		);
+		FILETIME sysIdle, sysKernel, sysUser;
+		if (GetSystemTimes(&sysIdle, &sysKernel, &sysUser) == 0)
+			return 0;
+
+		if (prevSysIdle.dwLowDateTime != 0 && prevSysIdle.dwHighDateTime != 0)
+		{
+			ULONGLONG sysIdleDiff, sysKernelDiff, sysUserDiff;
+			sysIdleDiff = __substract_time(sysIdle, prevSysIdle);
+			sysKernelDiff = __substract_time(sysKernel, prevSysKernel);
+			sysUserDiff = __substract_time(sysUser, prevSysUser);
+
+			ULONGLONG sysTotal = sysKernelDiff + sysUserDiff;
+			ULONGLONG kernelTotal = sysKernelDiff - sysIdleDiff;
+
+			ret = (double)(((kernelTotal + sysUserDiff) * 100.0) / sysTotal);
+		}
+		return ret;
+	}
 };

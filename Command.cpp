@@ -57,7 +57,14 @@ void Command::exec() {
 		if (full_cmd.size() >1) {
 			if (full_cmd[0] == "show") {
 				if (full_cmd.size() == 2) show(full_cmd[1]);
-				else show(full_cmd[1], full_cmd[2]);
+				else {
+					string city = "";
+					for (int i = 2; i < full_cmd.size(); i++) {
+						city += full_cmd[i] + "+";
+					}
+					city.erase(city.end() - 1);
+					show(full_cmd[1], city);
+				}
 			}
 			else if (full_cmd[0] == "help")
 				help(full_cmd[1]);
