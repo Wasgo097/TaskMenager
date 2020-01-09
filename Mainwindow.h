@@ -61,7 +61,7 @@ public:
 	bool is_open();
 	void set_flag(Flag f);
 	void set_city(string city);
-	//void set_process(string proc, bool procter);
+	void set_process(string proc, bool procter);
 	//static size get_physical_memory()                //dodane
 	//{
 	//	win_ptr(MEMORYSTATUSEX, ret);

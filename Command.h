@@ -5,8 +5,6 @@
 #include <string>
 #include <mutex>
 #include <vector>
-#include <Windows.h>
-#include <tlhelp32.h>
 typedef std::string string;
 class Mainwindow;
 class Command{
@@ -16,7 +14,6 @@ class Command{
 	void show(string temp, string city = "");
 	void kill(string name);
 	void clear();
-	//HANDLE GetProcessByName(PCSTR name);
 public:
 	Command(Mainwindow * window,string cmd="") :_command(cmd),_window(window){}
 	string command() {return _command;}

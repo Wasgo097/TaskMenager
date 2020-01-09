@@ -291,13 +291,13 @@ void Mainwindow::draw_cpu() {
 	_window->display();
 }
 void Mainwindow::kill_process() {
-	/*if (_process_terminate)
+	if (_process_terminate)
 		_main_text.setString("Udalo sie zamknac proces " + _process);
 	else
-		_main_text.setString("Nie udalo sie zamknac procesu " + _process);*/
+		_main_text.setString("Nie udalo sie zamknac procesu " + _process);
 	_window->clear();
 	_window->draw(_background);
-	//_window->draw(_main_text);
+	_window->draw(_main_text);
 	_window->display();
 }
 bool Mainwindow::is_open() {
@@ -311,7 +311,7 @@ void Mainwindow::set_flag(Flag f) {
 void Mainwindow::set_city(string city) {
 	this->_city = city;
 }
-//void Mainwindow::set_process(string proc, bool procter) {
-//	_process = proc;
-//	_process_terminate = procter;
-//}
+void Mainwindow::set_process(string proc, bool procter) {
+	_process = proc;
+	_process_terminate = procter;
+}
