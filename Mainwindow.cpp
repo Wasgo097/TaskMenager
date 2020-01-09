@@ -29,6 +29,7 @@ Mainwindow::Mainwindow(sf::Vector2f size) {
 		_background.setSize(_size);
 		_main_text.setFillColor(sf::Color::White);
 		_main_text.setFont(_main_font);
+		_main_text.setCharacterSize(15);
 	}
 }
 Mainwindow::Mainwindow(int x, int y) {
@@ -68,10 +69,8 @@ void Mainwindow::run() {
 				_change = true;
 		}
 		if (_change) {
-			if (_flag == Flag::null) {
-				_window->clear();
-				_window->draw(_background);
-				_window->display();
+			if (_flag == Flag::term) {
+				kill_process();
 			}
 			else if (_flag == Flag::cpu) {
 				draw_cpu();
@@ -82,8 +81,13 @@ void Mainwindow::run() {
 			else if (_flag == Flag::proc) {
 				draw_process();
 			}
-			else {
+			else if(_flag==Flag::wea){
 				draw_weather();
+			}
+			else {
+				_window->clear();
+				_window->draw(_background);
+				_window->display();
 			}
 			_change = false;
 		}
@@ -105,8 +109,17 @@ void Mainwindow::Create_weather_string()
 		text += "Wind: " + weather->wind_dir + " " + weather->wind_str + "km/h\n";
 		text += "Rain: " + weather->water + " mm";
 		_main_text.setString(text);
+		/*sf::Texture texture;
+		sf::Sprite sprite;*/
 		_window->clear();
 		_window->draw(_background);
+		/*if (weather->weather_type == "Overcast\n") {
+			if (!texture.loadFromFile("Overcast.jpg"))
+				std::cout << "Error with jpg" << std::endl;
+			sprite.setTexture(texture);
+			sprite.move(_size.x / 0.6, _size.y / 0.6);
+			_window->draw(sprite);
+		}*/
 		_window->draw(_main_text);
 		_window->display();
 	}
@@ -277,6 +290,16 @@ void Mainwindow::draw_cpu() {
 	_window->draw(_main_text);
 	_window->display();
 }
+void Mainwindow::kill_process() {
+	/*if (_process_terminate)
+		_main_text.setString("Udalo sie zamknac proces " + _process);
+	else
+		_main_text.setString("Nie udalo sie zamknac procesu " + _process);*/
+	_window->clear();
+	_window->draw(_background);
+	//_window->draw(_main_text);
+	_window->display();
+}
 bool Mainwindow::is_open() {
 	return _window->isOpen();
 }
@@ -288,3 +311,7 @@ void Mainwindow::set_flag(Flag f) {
 void Mainwindow::set_city(string city) {
 	this->_city = city;
 }
+//void Mainwindow::set_process(string proc, bool procter) {
+//	_process = proc;
+//	_process_terminate = procter;
+//}

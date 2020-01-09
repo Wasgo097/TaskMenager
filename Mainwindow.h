@@ -9,7 +9,6 @@
 #include <string>
 #include <memory>
 #include <iostream>
-#include <winsock2.h>
 #include <Windows.h>
 #include <iphlpapi.h>
 #include <map>
@@ -30,6 +29,8 @@ class Mainwindow{
 	sf::Text _main_text;
 	Flag _flag = Flag::null;
 	string _city;
+	string _process;
+	bool _process_terminate;
 	std::thread * _cmd_thr = nullptr;
 	bool _change=true;
 	static ULONGLONG __substract_time(const FILETIME one, const FILETIME two)      //dodane
@@ -56,51 +57,50 @@ public:
 	void draw_weather();
 	void draw_memory();
 	void draw_cpu();
+	void kill_process();
 	bool is_open();
 	void set_flag(Flag f);
 	void set_city(string city);
-	static size get_physical_memory()                //dodane
-	{
-		win_ptr(MEMORYSTATUSEX, ret);
-		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->ullTotalPhys);   //zapytaæ siê
-	}
-	static real get_physical_memory_usage()          // dodane
-	{
-		win_ptr(MEMORYSTATUSEX, ret);
-		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->dwMemoryLoad) / 100.0;   //zapytaæ siê, dzielenie bo zwroci jako l ca³k. wyswietlanie jako zmienny przecinek
-	}
-	static size get_hz_per_core()    //dodane
-	{
-		win_nl(LARGE_INTEGER, ret);
-		QueryPerformanceFrequency(ret.get());
-		return static_cast<size>(ret->QuadPart); //suma first i second part  
-	}
-	static real cpu_usage()                       //dodane
-	{
-		real ret{ 0.0 }; //bierze aktualne dane, po czasie 
-		FILETIME prevSysIdle, prevSysKernel, prevSysUser;
-		if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
-			return 0;
-		Sleep(15
-		);
-		FILETIME sysIdle, sysKernel, sysUser;
-		if (GetSystemTimes(&sysIdle, &sysKernel, &sysUser) == 0)
-			return 0;
-
-		if (prevSysIdle.dwLowDateTime != 0 && prevSysIdle.dwHighDateTime != 0)
-		{
-			ULONGLONG sysIdleDiff, sysKernelDiff, sysUserDiff;
-			sysIdleDiff = __substract_time(sysIdle, prevSysIdle);
-			sysKernelDiff = __substract_time(sysKernel, prevSysKernel);
-			sysUserDiff = __substract_time(sysUser, prevSysUser);
-
-			ULONGLONG sysTotal = sysKernelDiff + sysUserDiff;
-			ULONGLONG kernelTotal = sysKernelDiff - sysIdleDiff;
-
-			ret = (double)(((kernelTotal + sysUserDiff) * 100.0) / sysTotal);
-		}
-		return ret;
-	}
+	//void set_process(string proc, bool procter);
+	//static size get_physical_memory()                //dodane
+	//{
+	//	win_ptr(MEMORYSTATUSEX, ret);
+	//	GlobalMemoryStatusEx(ret.get());
+	//	return static_cast<size>(ret->ullTotalPhys);   //zapytaæ siê
+	//}
+	//static real get_physical_memory_usage()          // dodane
+	//{
+	//	win_ptr(MEMORYSTATUSEX, ret);
+	//	GlobalMemoryStatusEx(ret.get());
+	//	return static_cast<size>(ret->dwMemoryLoad) / 100.0;   //zapytaæ siê, dzielenie bo zwroci jako l ca³k. wyswietlanie jako zmienny przecinek
+	//}
+	//static size get_hz_per_core()    //dodane
+	//{
+	//	win_nl(LARGE_INTEGER, ret);
+	//	QueryPerformanceFrequency(ret.get());
+	//	return static_cast<size>(ret->QuadPart); //suma first i second part  
+	//}
+	//static real cpu_usage()                       //dodane
+	//{
+	//	real ret{ 0.0 }; //bierze aktualne dane, po czasie 
+	//	FILETIME prevSysIdle, prevSysKernel, prevSysUser;
+	//	if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
+	//		return 0;
+	//	Sleep(15
+	//	);
+	//	FILETIME sysIdle, sysKernel, sysUser;
+	//	if (GetSystemTimes(&sysIdle, &sysKernel, &sysUser) == 0)
+	//		return 0;
+	//	if (prevSysIdle.dwLowDateTime != 0 && prevSysIdle.dwHighDateTime != 0)
+	//	{
+	//		ULONGLONG sysIdleDiff, sysKernelDiff, sysUserDiff;
+	//		sysIdleDiff = __substract_time(sysIdle, prevSysIdle);
+	//		sysKernelDiff = __substract_time(sysKernel, prevSysKernel);
+	//		sysUserDiff = __substract_time(sysUser, prevSysUser);
+	//		ULONGLONG sysTotal = sysKernelDiff + sysUserDiff;
+	//		ULONGLONG kernelTotal = sysKernelDiff - sysIdleDiff;
+	//		ret = (double)(((kernelTotal + sysUserDiff) * 100.0) / sysTotal);
+	//	}
+	//	return ret;
+	//}
 };

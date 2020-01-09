@@ -2,7 +2,7 @@
 #include <string>
 typedef std::string string;
 enum Flag{
-	cpu,mem,proc,wea,null
+	cpu,mem,proc,wea,term,null
 };
 struct Weather {
 	string weather_type;
