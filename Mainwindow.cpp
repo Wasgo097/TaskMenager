@@ -227,19 +227,27 @@ void Mainwindow::draw_weather() {
 }
 
 	void Mainwindow::draw_memory() {
-		//do{
 		
-			//_main_text.setString("Pamiec: \n");
-		//string temptime = GetLocalTime(&stLocal);
 			std::string tmpStr = "";
-			tmpStr += "Pamiec: \n";
-			tmpStr += "ZPM: ";
+			tmpStr += "Memory ";
+			tmpStr += "\nPMU: ";
 			double temp = get_physical_memory_usage();//
 			double temp2 = get_physical_memory();//
-			tmpStr += std::to_string(temp);
+			double temp3 = get_virtual_memory();
+			double temp4 = get_avail_virtual_memory();
+			tmpStr += format_double(temp);
+			tmpStr += "% ";
 			tmpStr += "\nPM: ";
-			tmpStr += std::to_string(temp2);
+			tmpStr += format_double(temp2);
+			tmpStr += " KB ";
+			tmpStr += "\nVM: ";
+			tmpStr += format_double(temp3);
+			tmpStr += " KB";
+			tmpStr += "\nAvailable VM: ";
+			tmpStr += format_double(temp4);
+			tmpStr += " KB";
 			_main_text.setString(tmpStr);//
+			
 			_window->clear();
 			_window->draw(_background);
 			_window->draw(_main_text);
@@ -252,13 +260,14 @@ void Mainwindow::draw_weather() {
 
 	void Mainwindow::draw_cpu() {
 		//do {
-			std::string tmpStr = "";
-			tmpStr += "Number of Cores: ";
+			std::string tmpStr = "CPU";
+			tmpStr += "\nNumber of Cores: ";
 			double temp = get_core_number();//
 			double temp2 = cpu_usage();//
-			tmpStr += std::to_string(temp);
+			tmpStr += format_double(temp);
 			tmpStr += "\nCpu Usage: ";
-			tmpStr += std::to_string(temp2);
+			tmpStr += format_double(temp2);
+			tmpStr += "%";
 			//tmpStr2 += std::to_string(temp2);
 			_main_text.setString(tmpStr);//
 			//_main_text.setString("Procesor");

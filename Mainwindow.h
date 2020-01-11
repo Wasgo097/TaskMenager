@@ -17,6 +17,8 @@
 #include<stdio.h>
 #include<tchar.h>
 #include<psapi.h>
+#include <iomanip>
+#include <sstream>
 
 typedef std::string string;
 typedef unsigned int size;
@@ -24,6 +26,7 @@ typedef double real;
 typedef unsigned int amount;
 #define win_nl(T, y) std::unique_ptr<T> y{ new T() }; //wskaŸnik do struktury    dodane
 #define win_ptr(T, y) win_nl(T, y) y->dwLength = sizeof(T);  //rozmiar           dodane
+//#define DIV 1024.0;
 
 
 
@@ -43,7 +46,16 @@ class Mainwindow{
 	string _city;
 	std::thread * _cmd_thr = nullptr;
 	bool _change=true;
-	static ULONGLONG __substract_time(const FILETIME one, const FILETIME two)      //dodane
+
+	std::string format_double(const double src, const unsigned short precision = 2) //metoda zmieiaj¹ca precyzjê wyœwietlanych wyników
+	{
+		std::stringstream stream;
+		stream << std::fixed << std::setprecision(precision) << src;
+		return stream.str();
+	}
+
+	
+	ULONGLONG __substract_time(const FILETIME one, const FILETIME two)      //dodane
 	{
 		LARGE_INTEGER a, b;
 		a.LowPart = one.dwLowDateTime;
@@ -86,50 +98,63 @@ public:
 	//	
 	//}
 	//SYSTEMTIME stLocal;
-	void process_name_(DWORD processID)
-	{
-		TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
 
-		// Get a handle to the process.
+	//void process_name_(DWORD processID)
+	//{
+	//	TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
 
-		HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-			PROCESS_VM_READ,
-			FALSE, processID);
+	//	// Get a handle to the process.
 
-		// Get the process name.
+	//	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+	//		PROCESS_VM_READ,
+	//		FALSE, processID);
 
-		if (NULL != hProcess)
-		{
-			HMODULE hMod;
-			DWORD cbNeeded;
+	//	// Get the process name.
 
-			if (EnumProcessModules(hProcess, &hMod, sizeof(hMod),
-				&cbNeeded))
-			{
-				GetModuleBaseName(hProcess, hMod, szProcessName,
-					sizeof(szProcessName) / sizeof(TCHAR));
-			}
-		}
+	//	if (NULL != hProcess)
+	//	{
+	//		HMODULE hMod;
+	//		DWORD cbNeeded;
 
-		// Print the process name and identifier.
+	//		if (EnumProcessModules(hProcess, &hMod, sizeof(hMod),
+	//			&cbNeeded))
+	//		{
+	//			GetModuleBaseName(hProcess, hMod, szProcessName,
+	//				sizeof(szProcessName) / sizeof(TCHAR));
+	//		}
+	//	}
 
-		_tprintf(TEXT("%s  (PID: %u)\n"), szProcessName, processID);
+	//	// Print the process name and identifier.
 
-		// Release the handle to the process.
+	//	_tprintf(TEXT("%s  (PID: %u)\n"), szProcessName, processID);
 
-		CloseHandle(hProcess);
-	}
+	//	// Release the handle to the process.
+
+	//	CloseHandle(hProcess);
+	//}
 	size get_physical_memory()                //dodane
 	{
 		win_ptr(MEMORYSTATUSEX, ret);
 		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->ullTotalPhys);   //zapytaæ siê
+		return static_cast<size>(ret->ullTotalPhys/1024);   //zapytaæ siê
+	}
+	size get_virtual_memory()                //dodane
+	{
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->ullTotalVirtual/1024);   //zapytaæ siê
+	}
+	size get_avail_virtual_memory()                //dodane
+	{
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->ullAvailVirtual/1024);   //zapytaæ siê
 	}
 	real get_physical_memory_usage()          // dodane
 	{
 		win_ptr(MEMORYSTATUSEX, ret);
 		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->dwMemoryLoad) / 100.0;   //zapytaæ siê, dzielenie bo zwroci jako l ca³k. wyswietlanie jako zmienny przecinek
+		return static_cast<size>(ret->dwMemoryLoad/1024) / 100.0;   //zapytaæ siê, dzielenie bo zwroci jako l ca³k. wyswietlanie jako zmienny przecinek
 	}
 	real get_core_number() {  //dodane
 		win_nl(SYSTEM_INFO, ret);
@@ -137,12 +162,12 @@ public:
 		//ret.dwNumberOfProcessors;
 		return static_cast<size>(ret->dwNumberOfProcessors);
 	}
-	size get_hz_per_core()    //dodane
-	{
-		win_nl(LARGE_INTEGER, ret);
-		QueryPerformanceFrequency(ret.get());
-		return static_cast<size>(ret->QuadPart); //suma first i second part  
-	}
+	//size get_hz_per_core()    //dodane
+	//{
+	//	win_nl(LARGE_INTEGER, ret);
+	//	QueryPerformanceFrequency(ret.get());
+	//	return static_cast<size>(ret->QuadPart); //suma first i second part  
+	//}
 	real cpu_usage()                       //dodane
 	{
 		real ret{ 0.0 }; //bierze aktualne dane, po czasie 
