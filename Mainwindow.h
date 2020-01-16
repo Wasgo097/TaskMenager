@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include "Command.h"
@@ -17,6 +17,8 @@
 #include<stdio.h>
 #include<tchar.h>
 #include<psapi.h>
+#include <iomanip>
+#include <sstream>
 typedef std::string string;
 typedef unsigned int size;
 typedef double real;
@@ -46,9 +48,13 @@ class Mainwindow{
 		b.HighPart = two.dwHighDateTime;
 		return a.QuadPart - b.QuadPart;
 	}
-	///clear from </span and space from begining
 	void clear_string(string * str);
 	void remove_space(string * str);
+	std::string format_double(const double src, const unsigned short precision = 2){
+		std::stringstream stream;
+		stream << std::fixed << std::setprecision(precision) << src;
+		return stream.str();
+	}
 public:
 	Mainwindow(sf::Vector2f size);
 	Mainwindow(int x = 500, int y = 500);
@@ -86,28 +92,38 @@ public:
 		// Release the handle to the process.
 		CloseHandle(hProcess);
 	}
-	size get_physical_memory() {               //dodane
+	size get_physical_memory(){
 		win_ptr(MEMORYSTATUSEX, ret);
 		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->ullTotalPhys);   //zapyta� si�
+		return static_cast<size>(ret->ullTotalPhys/1024);   //zapyta� si�
 	}
-	real get_physical_memory_usage(){          // dodane
+	size get_virtual_memory(){
 		win_ptr(MEMORYSTATUSEX, ret);
 		GlobalMemoryStatusEx(ret.get());
-		return static_cast<size>(ret->dwMemoryLoad) / 100.0;   //zapyta� si�, dzielenie bo zwroci jako l ca�k. wyswietlanie jako zmienny przecinek
+		return static_cast<size>(ret->ullTotalVirtual/1024);   //zapyta� si�
 	}
-	real get_core_number() {  //dodane
+	size get_avail_virtual_memory(){
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->ullAvailVirtual/1024);   //zapyta� si�
+	}
+	real get_physical_memory_usage(){
+		win_ptr(MEMORYSTATUSEX, ret);
+		GlobalMemoryStatusEx(ret.get());
+		return static_cast<size>(ret->dwMemoryLoad/1024) / 100.0;   //zapyta� si�, dzielenie bo zwroci jako l ca�k. wyswietlanie jako zmienny przecinek
+	}
+	real get_core_number() {
 		win_nl(SYSTEM_INFO, ret);
 		GetSystemInfo(ret.get());
 		//ret.dwNumberOfProcessors;
 		return static_cast<size>(ret->dwNumberOfProcessors);
 	}
-	size get_hz_per_core(){    //dodane
+	size get_hz_per_core(){
 		win_nl(LARGE_INTEGER, ret);
 		QueryPerformanceFrequency(ret.get());
 		return static_cast<size>(ret->QuadPart); //suma first i second part  
 	}
-	real cpu_usage(){                       //dodane
+	real cpu_usage(){
 		real ret{ 0.0 }; //bierze aktualne dane, po czasie 
 		FILETIME prevSysIdle, prevSysKernel, prevSysUser;
 		if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
