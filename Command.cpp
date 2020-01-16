@@ -1,6 +1,5 @@
 #include "Command.h"
 #include "Mainwindow.h"
-<<<<<<< HEAD
 #include <tlhelp32.h>
 #include <Windows.h>
 HANDLE GetProcessByName(PCSTR name) {
@@ -27,8 +26,6 @@ HANDLE GetProcessByName(PCSTR name) {
 	// Not found
 	return NULL;
 }
-=======
->>>>>>> df995e29a225298c097c0d5dc921483d00163261
 void Command::help(string temp) {
 	if (temp == "show")
 		std::cout << "Mozesz wyswietlic:" << std::endl <<
@@ -66,15 +63,10 @@ void Command::show(string temp, string city) {
 		std::cout << "Nieznana komenda, uzyj help show"<<std::endl;
 	}
 }
-<<<<<<< HEAD
 void Command::kill(string name) {
 	_window->set_flag(Flag::term);
 	HANDLE handle = GetProcessByName(name.c_str());
 	_window->set_process(name, TerminateProcess(handle, 0));
-=======
-void Command::kill(string id) {
-
->>>>>>> df995e29a225298c097c0d5dc921483d00163261
 }
 void Command::clear() { system("cls"); }
 void Command::exec() {
@@ -105,11 +97,7 @@ void Command::exec() {
 			else if (full_cmd[0] == "help")
 				help(full_cmd[1]);
 			else if (full_cmd[0] == "kill")
-<<<<<<< HEAD
 				kill(full_cmd[1]);
-=======
-				std::cout << "kill";
->>>>>>> df995e29a225298c097c0d5dc921483d00163261
 			else std::cout << "Nieznana komenda, uzyj komendy help" << std::endl;
 		}
 		else if (full_cmd.size() == 1 && full_cmd[0] == "clear") {

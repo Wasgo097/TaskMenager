@@ -298,22 +298,21 @@ void Mainwindow::kill_process() {
 	_window->draw(_main_text);
 	_window->display();
 }
-void Mainwindow::draw_cpu() {
-	std::string tmpStr = "";
-	tmpStr += "Number of Cores: ";
-	double temp = get_core_number();
-	double temp2 = cpu_usage();
-	tmpStr += std::to_string(temp);
-	tmpStr += "\nCpu Usage: ";
-	tmpStr += std::to_string(temp2);
-	_main_text.setString(tmpStr);
-	_window->clear();
-	_window->draw(_background);
-	_window->draw(_main_text);
-	_window->display();
-}
+//void Mainwindow::draw_cpu() {
+//	std::string tmpStr = "";
+//	tmpStr += "Number of Cores: ";
+//	double temp = get_core_number();
+//	double temp2 = cpu_usage();
+//	tmpStr += std::to_string(temp);
+//	tmpStr += "\nCpu Usage: ";
+//	tmpStr += std::to_string(temp2);
+//	_main_text.setString(tmpStr);
+//	_window->clear();
+//	_window->draw(_background);
+//	_window->draw(_main_text);
+//	_window->display();
+//}
 void Mainwindow::draw_memory() {
-	
 		std::string tmpStr = "";
 		tmpStr += "Memory ";
 		tmpStr += "\nPMU: ";
@@ -359,7 +358,6 @@ void Mainwindow::draw_cpu() {
 	_window->draw(_background);
 	_window->draw(_main_text);
 	_window->display();
-	Sleep(500);
 }
 bool Mainwindow::is_open() {
 	return _window->isOpen();
