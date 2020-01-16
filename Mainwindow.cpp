@@ -93,15 +93,7 @@ void Mainwindow::run() {
 		}
 	}
 }
-void Mainwindow::draw_process() {
-	_main_text.setString("Procesy");
-	_window->clear();
-	_window->draw(_background);
-	_window->draw(_main_text);
-	_window->display();
-}
-void Mainwindow::Create_weather_string()
-{
+void Mainwindow::Create_weather_string(){
 	if (weather != nullptr) {
 		string text = "Weather in " + _city + "\n" + weather->weather_type;
 		if (weather->min_temp == weather->max_temp)text += weather->min_temp + " C\n";
@@ -109,17 +101,8 @@ void Mainwindow::Create_weather_string()
 		text += "Wind: " + weather->wind_dir + " " + weather->wind_str + "km/h\n";
 		text += "Rain: " + weather->water + " mm";
 		_main_text.setString(text);
-		/*sf::Texture texture;
-		sf::Sprite sprite;*/
 		_window->clear();
 		_window->draw(_background);
-		/*if (weather->weather_type == "Overcast\n") {
-			if (!texture.loadFromFile("Overcast.jpg"))
-				std::cout << "Error with jpg" << std::endl;
-			sprite.setTexture(texture);
-			sprite.move(_size.x / 0.6, _size.y / 0.6);
-			_window->draw(sprite);
-		}*/
 		_window->draw(_main_text);
 		_window->display();
 	}
@@ -128,18 +111,55 @@ void Mainwindow::Create_weather_string()
 		set_flag(Flag::null);
 	}
 }
+void Mainwindow::draw_process() {
+	//GetLocalTime(&stLocal);
+	//DWORD aProcesses[1024], cbNeeded, cProcesses;
+	//unsigned int i;
+	//if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
+	//{
+	//	//Sleep(500);
+	//}
+	//// Calculate how many process identifiers were returned.
+	//cProcesses = cbNeeded / sizeof(DWORD);
+	//// Print the name and process identifier for each process.
+	//for (i = 0; i < 10; i++)
+	//{
+	//
+	//	if (aProcesses[i] != 0)
+	//	{
+	//		//PrintProcessNameAndID(aProcesses[i]);
+	//		std::string tmpStr = "";
+	//		tmpStr += "Procesy: \n";
+	//		//tmpStr += "ZPM: ";
+	//		double temp = aProcesses[i];//
+	//		//double temp2 = get_physical_memory();//
+	//		tmpStr += std::to_string(temp);
+	//		//tmpStr += "\nPM: ";
+	//		//tmpStr += std::to_string(temp2);
+	//		_main_text.setString(tmpStr);//
+	//		Sleep(500);
+	//	}
+	//}
+	_main_text.setString("Proces: ");
+	_window->clear();
+	_window->draw(_background);
+	_window->draw(_main_text);
+	//_window->draw(_main_text2);
+	_window->display();
+}
 void Mainwindow::draw_weather() {
 	if (weather == nullptr) {
 		weather = std::make_shared<Weather>();
 		std::map<string, string> wind_dir;
-		wind_dir["↑"] = "N";
-		wind_dir["↗"] = "NE";
-		wind_dir["→"] = "E";
-		wind_dir["↘"] = "SE";
-		wind_dir["↓"] = "S";
-		wind_dir["↙"] = "SW";
-		wind_dir["←"] = "W";
-		wind_dir["↖"] = "NW";
+		wind_dir["↑"] = "polnoc";
+		wind_dir["↗"] = "polnocny-zachod";
+		wind_dir["→"] = "wschod";
+		wind_dir["↘"] = "poludniowy-wschod";
+		wind_dir["↓"] = "poludnie";
+		wind_dir["↙"] = "poludniowy-zachod";
+		wind_dir["←"] = "zachod";
+		wind_dir["↖"] = "polnocny-zachod";
+		_main_text.setString("Pogoda w miescie " + _city);
 		sf::Http http("http://wttr.in/");
 		sf::Http::Request request("/"+_city, sf::Http::Request::Get);
 		sf::Http::Response response = http.sendRequest(request);
@@ -275,16 +295,6 @@ void Mainwindow::draw_weather() {
 	}
 	else 
 		Create_weather_string();
-}
-void Mainwindow::draw_memory() {
-	_main_text.setString("Pamiec");
-	_window->clear();
-	_window->draw(_background);
-	_window->draw(_main_text);
-	_window->display();
-}
-void Mainwindow::draw_cpu() {
-	_main_text.setString("Procesor");
 	_window->clear();
 	_window->draw(_background);
 	_window->draw(_main_text);
@@ -295,6 +305,36 @@ void Mainwindow::kill_process() {
 		_main_text.setString("Udalo sie zamknac proces " + _process);
 	else
 		_main_text.setString("Nie udalo sie zamknac procesu " + _process);
+	_window->clear();
+	_window->draw(_background);
+	_window->draw(_main_text);
+	_window->display();
+}
+void Mainwindow::draw_memory() {
+	std::string tmpStr = "";
+	tmpStr += "Pamiec: \n";
+	tmpStr += "ZPM: ";
+	double temp = get_physical_memory_usage();//
+	double temp2 = get_physical_memory();//
+	tmpStr += std::to_string(temp);
+	tmpStr += "\nPM: ";
+	tmpStr += std::to_string(temp2);
+	_main_text.setString(tmpStr);//
+	_window->clear();
+	_window->draw(_background);
+	_window->draw(_main_text);
+	_window->display();
+}
+void Mainwindow::draw_cpu() {
+	std::string tmpStr = "";
+	tmpStr += "Number of Cores: ";
+	double temp = get_core_number();
+	double temp2 = cpu_usage();
+	tmpStr += std::to_string(temp);
+	tmpStr += "\nCpu Usage: ";
+	tmpStr += std::to_string(temp2);
+	_main_text.setString(tmpStr);//
+	//_main_text.setString("Procesor");
 	_window->clear();
 	_window->draw(_background);
 	_window->draw(_main_text);
