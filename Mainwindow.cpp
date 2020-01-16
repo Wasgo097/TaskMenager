@@ -151,14 +151,14 @@ void Mainwindow::draw_weather() {
 	if (weather == nullptr) {
 		weather = std::make_shared<Weather>();
 		std::map<string, string> wind_dir;
-		wind_dir["↑"] = "polnoc";
-		wind_dir["↗"] = "polnocny-zachod";
-		wind_dir["→"] = "wschod";
-		wind_dir["↘"] = "poludniowy-wschod";
-		wind_dir["↓"] = "poludnie";
-		wind_dir["↙"] = "poludniowy-zachod";
-		wind_dir["←"] = "zachod";
-		wind_dir["↖"] = "polnocny-zachod";
+		wind_dir["↑"] = "N";
+		wind_dir["↗"] = "NE";
+		wind_dir["→"] = "E";
+		wind_dir["↘"] = "SE";
+		wind_dir["↓"] = "S";
+		wind_dir["↙"] = "SW";
+		wind_dir["←"] = "W";
+		wind_dir["↖"] = "NW";
 		_main_text.setString("Pogoda w miescie " + _city);
 		sf::Http http("http://wttr.in/");
 		sf::Http::Request request("/"+_city, sf::Http::Request::Get);
@@ -325,64 +325,6 @@ void Mainwindow::draw_cpu() {
 	_window->draw(_main_text);
 	_window->display();
 }
-//void Mainwindow::draw_cpu() {
-//	//do {
-//	std::string tmpStr = "CPU";
-//	tmpStr += "\nNumber of Cores: ";
-//	double temp = get_core_number();//
-//	double temp2 = cpu_usage();//
-//	tmpStr += format_double(temp);
-//	tmpStr += "\nCpu Usage: ";
-//	tmpStr += format_double(temp2);
-//	tmpStr += "%";
-//	//tmpStr2 += std::to_string(temp2);
-//	_main_text.setString(tmpStr);//
-//	//_main_text.setString("Procesor");
-//	_window->clear();
-//	_window->draw(_background);
-//	_window->draw(_main_text);
-//	_window->display();
-//	Sleep(500);
-//	/*}
-//		if (GetKeyState('x') < 0) {
-//			Sleep(1000);
-//		}
-//		else {
-//			break;
-//		}*/
-//		/*}while (_getch() != '27');*/
-//}
-//void Mainwindow::draw_memory() {
-//		
-//		std::string tmpStr = "";
-//		tmpStr += "Memory ";
-//		tmpStr += "\nPMU: ";
-//		double temp = get_physical_memory_usage();//
-//		double temp2 = get_physical_memory();//
-//		double temp3 = get_virtual_memory();
-//		double temp4 = get_avail_virtual_memory();
-//		tmpStr += format_double(temp);
-//		tmpStr += "% ";
-//		tmpStr += "\nPM: ";
-//		tmpStr += format_double(temp2);
-//		tmpStr += " KB ";
-//		tmpStr += "\nVM: ";
-//		tmpStr += format_double(temp3);
-//		tmpStr += " KB";
-//		tmpStr += "\nAvailable VM: ";
-//		tmpStr += format_double(temp4);
-//		tmpStr += " KB";
-//		_main_text.setString(tmpStr);//
-//			
-//		_window->clear();
-//		_window->draw(_background);
-//		_window->draw(_main_text);
-//		_window->display();
-//		Sleep(500);
-//		
-//			
-//	//} while (_getch() != '27');
-//}
 void Mainwindow::draw_memory() {
 	std::string tmpStr = "";
 	tmpStr += "Pamiec: \n";
