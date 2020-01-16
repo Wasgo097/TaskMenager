@@ -46,9 +46,10 @@ Mainwindow::Mainwindow(int x, int y) {
 		_command = std::make_shared<Command>(this/*,&_mtx*/);
 		_background.setFillColor(_backgroud_color);
 		_background.setPosition(0, 0);
-		_background.setSize(sf::Vector2f(_size));
+		_background.setSize(_size);
 		_main_text.setFillColor(sf::Color::White);
 		_main_text.setFont(_main_font);
+		_main_text.setCharacterSize(15);
 	}
 }
 Mainwindow::~Mainwindow() {
@@ -69,21 +70,16 @@ void Mainwindow::run() {
 				_change = true;
 		}
 		if (_change) {
-			if (_flag == Flag::term) {
+			if (_flag == Flag::term)
 				kill_process();
-			}
-			else if (_flag == Flag::cpu) {
+			else if (_flag == Flag::cpu) 
 				draw_cpu();
-			}
-			else if (_flag == Flag::mem) {
+			else if (_flag == Flag::mem) 
 				draw_memory();
-			}
-			else if (_flag == Flag::proc) {
+			else if (_flag == Flag::proc) 
 				draw_process();
-			}
-			else if(_flag==Flag::wea){
+			else if(_flag==Flag::wea)
 				draw_weather();
-			}
 			else {
 				_window->clear();
 				_window->draw(_background);
@@ -112,13 +108,6 @@ void Mainwindow::Create_weather_string(){
 	}
 }
 void Mainwindow::draw_process() {
-	//GetLocalTime(&stLocal);
-	//DWORD aProcesses[1024], cbNeeded, cProcesses;
-	//unsigned int i;
-	//if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
-	//{
-	//	//Sleep(500);
-	//}
 	//// Calculate how many process identifiers were returned.
 	//cProcesses = cbNeeded / sizeof(DWORD);
 	//// Print the name and process identifier for each process.
@@ -140,11 +129,10 @@ void Mainwindow::draw_process() {
 	//		Sleep(500);
 	//	}
 	//}
-	_main_text.setString("Proces: ");
+	_main_text.setString("Process: ");
 	_window->clear();
 	_window->draw(_background);
 	_window->draw(_main_text);
-	//_window->draw(_main_text2);
 	_window->display();
 }
 void Mainwindow::draw_weather() {
@@ -318,85 +306,60 @@ void Mainwindow::draw_cpu() {
 	tmpStr += std::to_string(temp);
 	tmpStr += "\nCpu Usage: ";
 	tmpStr += std::to_string(temp2);
+	_main_text.setString(tmpStr);
+	_window->clear();
+	_window->draw(_background);
+	_window->draw(_main_text);
+	_window->display();
+}
+void Mainwindow::draw_memory() {
+	
+		std::string tmpStr = "";
+		tmpStr += "Memory ";
+		tmpStr += "\nPMU: ";
+		double temp = get_physical_memory_usage();//
+		double temp2 = get_physical_memory();//
+		double temp3 = get_virtual_memory();
+		double temp4 = get_avail_virtual_memory();
+		tmpStr += format_double(temp);
+		tmpStr += "% ";
+		tmpStr += "\nPM: ";
+		tmpStr += format_double(temp2);
+		tmpStr += " KB ";
+		tmpStr += "\nVM: ";
+		tmpStr += format_double(temp3);
+		tmpStr += " KB";
+		tmpStr += "\nAvailable VM: ";
+		tmpStr += format_double(temp4);
+		tmpStr += " KB";
+		_main_text.setString(tmpStr);//
+		
+		_window->clear();
+		_window->draw(_background);
+		_window->draw(_main_text);
+		_window->display();
+		Sleep(500);
+	
+		
+	//} while (_getch() != '27');
+}
+void Mainwindow::draw_cpu() {
+	std::string tmpStr = "CPU";
+	tmpStr += "\nNumber of Cores: ";
+	double temp = get_core_number();//
+	double temp2 = cpu_usage();//
+	tmpStr += format_double(temp);
+	tmpStr += "\nCpu Usage: ";
+	tmpStr += format_double(temp2);
+	tmpStr += "%";
+	//tmpStr2 += std::to_string(temp2);
 	_main_text.setString(tmpStr);//
 	//_main_text.setString("Procesor");
 	_window->clear();
 	_window->draw(_background);
 	_window->draw(_main_text);
 	_window->display();
-}
-//void Mainwindow::draw_cpu() {
-//	//do {
-//	std::string tmpStr = "CPU";
-//	tmpStr += "\nNumber of Cores: ";
-//	double temp = get_core_number();//
-//	double temp2 = cpu_usage();//
-//	tmpStr += format_double(temp);
-//	tmpStr += "\nCpu Usage: ";
-//	tmpStr += format_double(temp2);
-//	tmpStr += "%";
-//	//tmpStr2 += std::to_string(temp2);
-//	_main_text.setString(tmpStr);//
-//	//_main_text.setString("Procesor");
-//	_window->clear();
-//	_window->draw(_background);
-//	_window->draw(_main_text);
-//	_window->display();
-//	Sleep(500);
-//	/*}
-//		if (GetKeyState('x') < 0) {
-//			Sleep(1000);
-//		}
-//		else {
-//			break;
-//		}*/
-//		/*}while (_getch() != '27');*/
-//}
-//void Mainwindow::draw_memory() {
-//		
-//		std::string tmpStr = "";
-//		tmpStr += "Memory ";
-//		tmpStr += "\nPMU: ";
-//		double temp = get_physical_memory_usage();//
-//		double temp2 = get_physical_memory();//
-//		double temp3 = get_virtual_memory();
-//		double temp4 = get_avail_virtual_memory();
-//		tmpStr += format_double(temp);
-//		tmpStr += "% ";
-//		tmpStr += "\nPM: ";
-//		tmpStr += format_double(temp2);
-//		tmpStr += " KB ";
-//		tmpStr += "\nVM: ";
-//		tmpStr += format_double(temp3);
-//		tmpStr += " KB";
-//		tmpStr += "\nAvailable VM: ";
-//		tmpStr += format_double(temp4);
-//		tmpStr += " KB";
-//		_main_text.setString(tmpStr);//
-//			
-//		_window->clear();
-//		_window->draw(_background);
-//		_window->draw(_main_text);
-//		_window->display();
-//		Sleep(500);
-//		
-//			
-//	//} while (_getch() != '27');
-//}
-void Mainwindow::draw_memory() {
-	std::string tmpStr = "";
-	tmpStr += "Pamiec: \n";
-	tmpStr += "ZPM: ";
-	double temp = get_physical_memory_usage();//
-	double temp2 = get_physical_memory();//
-	tmpStr += std::to_string(temp);
-	tmpStr += "\nPM: ";
-	tmpStr += std::to_string(temp2);
-	_main_text.setString(tmpStr);//
-	_window->clear();
-	_window->draw(_background);
-	_window->draw(_main_text);
-	_window->display();
+	Sleep(500);
 }
 bool Mainwindow::is_open() {
 	return _window->isOpen();
