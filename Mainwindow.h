@@ -103,11 +103,13 @@ public:
 	//{
 	//	TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
 
+
 	//	// Get a handle to the process.
 
 	//	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
 	//		PROCESS_VM_READ,
 	//		FALSE, processID);
+
 
 	//	// Get the process name.
 
