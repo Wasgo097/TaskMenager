@@ -102,9 +102,9 @@ double getCurrentValue2() {
 }
 void fun(std::future<void> future) {
 	while (future.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout) {
-		size_t size = 1024;
+		size_t size = 1024*1024;
 		double * ptr = new double[size];
-		for (size_t i = 0; i < size; i++) {
+		/*for (size_t i = 0; i < size; i++) {
 			if (future.wait_for(std::chrono::milliseconds(1)) != std::future_status::timeout) {
 				cout << "terminate" << endl;
 				break;
@@ -116,21 +116,21 @@ void fun(std::future<void> future) {
 			for (size_t i = 0; i < size; i++)
 				ptr[i] = unif(re);
 			sin(ptr[i])*cos(ptr[i]);
-		}
+		}*/
 		delete[]ptr;
-		cout << "loop" << endl;
+		//cout << "loop" << endl;
 	}
 }
 int main() {
 	std::promise<void> signal_exit; //create promise object
 	std::future<void> future = signal_exit.get_future();//create future objects
+	init();
 	init2();
-	
 	thread thr(fun,std::move(future));
 	for (int i = 1; i < 1000;i++) {
 		if (i % 20 == 0)system("cls");
-		cout << getCurrentValue2()<<endl;
-		std::this_thread::sleep_for(50ms);
+		cout <<"My: "<< getCurrentValue2()<<endl<<"All: "<<getCurrentValue()<<endl<<endl;
+		std::this_thread::sleep_for(200ms);
 	}
 	signal_exit.set_value();
 	thr.join();
