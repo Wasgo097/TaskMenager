@@ -1,6 +1,6 @@
 #include "Mainwindow.h"
 #include <SFML/Network.hpp>
-#include <algorithm>
+#include <iostream>
 void Mainwindow::clear_string(string * str) {
 	size_t span = str->find("</span");
 	while (span < str->size()) {
@@ -13,25 +13,6 @@ void Mainwindow::clear_string(string * str) {
 void Mainwindow::remove_space(string * str) {
 	size_t last_space = str->find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789");
 	*str = str->substr(last_space + 1);
-}
-Mainwindow::Mainwindow(sf::Vector2f size) {
-	_size = size;
-	_window = std::make_shared<sf::RenderWindow>(sf::VideoMode(_size.x, _size.y), "Task Menager");
-	if (!_main_font.loadFromFile("Font.ttf")) {
-		std::cout << "Error with font";
-		std::cin.ignore(1);
-		exit(-1);
-	}
-	else {
-		_backgroud_color = sf::Color::Black;
-		_command = std::make_shared<Command>(this);
-		_background.setFillColor(_backgroud_color);
-		_background.setPosition(0, 0);
-		_background.setSize(_size);
-		_main_text.setFillColor(sf::Color::White);
-		_main_text.setFont(_main_font);
-		_main_text.setCharacterSize(15);
-	}
 }
 Mainwindow::Mainwindow(int x, int y) {
 	_size.x = x;
@@ -71,13 +52,13 @@ void Mainwindow::run() {
 				_change = true;
 		}
 		if (_change) {
+			_change = false;
 			if (_flag == Flag::term)kill_process();
 			else if (_flag == Flag::cpu) draw_cpu();
 			else if (_flag == Flag::mem) draw_memory();
 			else if (_flag == Flag::proc) draw_processes();
 			else if(_flag==Flag::wea)draw_weather();
 			else if(_flag==Flag::help)draw_help();
-			_change = false;
 		}
 	}
 }
@@ -370,48 +351,46 @@ void Mainwindow::kill_process() {
 	_window->display();
 }
 void Mainwindow::draw_memory() {
-		std::string tmpStr = "";
-		tmpStr += "Memory ";
-		tmpStr += "\nPMU: ";
-		double temp = get_physical_memory_usage();//
-		double temp2 = get_physical_memory();//
-		double temp3 = get_virtual_memory();
-		double temp4 = get_avail_virtual_memory();
-		tmpStr += format_double(temp);
-		tmpStr += "% ";
-		tmpStr += "\nPM: ";
-		tmpStr += format_double(temp2);
-		tmpStr += " KB ";
-		tmpStr += "\nVM: ";
-		tmpStr += format_double(temp3);
-		tmpStr += " KB";
-		tmpStr += "\nAvailable VM: ";
-		tmpStr += format_double(temp4);
-		tmpStr += " KB";
-		_main_text.setString(tmpStr);
+	int i = 0;
+	while (!_change) {
+		MEMORYSTATUSEX memInfo;
+		memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+		GlobalMemoryStatusEx(&memInfo);
+		DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
+		DWORDLONG freePhysMem = memInfo.ullAvailPhys;
+		DWORDLONG physMemUsed = totalPhysMem - freePhysMem;
+		string temp = "RAM resources:\n";
+		temp += "Total: " + std::to_string(totalPhysMem / 1024 / 1024) + " MB\n";
+		temp += "Free: " + std::to_string(freePhysMem / 1024 / 1024) + " MB\n";
+		temp += "Used: " + std::to_string(physMemUsed / 1024 / 1024) + " MB\n";
+		_main_text.setString(temp);
 		_window->clear();
 		_window->draw(_background);
 		_window->draw(_main_text);
 		_window->display();
-		Sleep(500);
-	
-		
-	//} while (_getch() != '27');
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		i++;
+	}
+	///
 }
 void Mainwindow::draw_cpu() {
-	std::string tmpStr = "CPU";
-	tmpStr += "\nNumber of Cores: ";
-	double temp = get_core_number();//
-	double temp2 = cpu_usage();//
-	tmpStr += format_double(temp);
-	tmpStr += "\nCpu Usage: ";
-	tmpStr += format_double(temp2);
-	tmpStr += "%";
-	_main_text.setString(tmpStr);
-	_window->clear();
-	_window->draw(_background);
-	_window->draw(_main_text);
-	_window->display();
+	init();
+	int i = 0;
+	while(!_change){
+		string temp = "CPU resources:\n";
+		temp += "Number of cores: " + std::to_string(get_core_number()) + "\n";
+		temp += "CPU usage: " + std::to_string(getCurrentValue()) + " %\n";
+		std::cout << "";
+		//system("cls");
+		_main_text.setString(temp);
+		_window->clear();
+		_window->draw(_background);
+		_window->draw(_main_text);
+		_window->display();
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		i++;
+	}
+	///
 }
 void Mainwindow::draw_help() {
 	if (_help == Help::unknow) {
@@ -493,55 +472,66 @@ void Mainwindow::set_process(string proc, bool procter) {
 void Mainwindow::set_process_info(Processes_info x) {
 	_process_sort = x;
 }
-size Mainwindow::get_physical_memory() {
-	win_ptr(MEMORYSTATUSEX, ret);
-	GlobalMemoryStatusEx(ret.get());
-	return static_cast<size>(ret->ullTotalPhys / 1024);   //zapyta� si�
+int Mainwindow::get_core_number() {
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
 }
-size Mainwindow::get_virtual_memory() {
-	win_ptr(MEMORYSTATUSEX, ret);
-	GlobalMemoryStatusEx(ret.get());
-	return static_cast<size>(ret->ullTotalVirtual / 1024);   //zapyta� si�
+void Mainwindow::init() {
+	PdhOpenQuery(NULL, NULL, &cpuQuery);
+	// You can also use L"\\Processor(*)\\% Processor Time" and get individual CPU values with PdhGetFormattedCounterArray()
+	PdhAddEnglishCounter(cpuQuery, "\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal);
+	PdhCollectQueryData(cpuQuery);
 }
-size Mainwindow::get_avail_virtual_memory() {
-	win_ptr(MEMORYSTATUSEX, ret);
-	GlobalMemoryStatusEx(ret.get());
-	return static_cast<size>(ret->ullAvailVirtual / 1024);   //zapyta� si�
+double Mainwindow::getCurrentValue() {
+	PDH_FMT_COUNTERVALUE counterVal;
+	PdhCollectQueryData(cpuQuery);
+	PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
+	return counterVal.doubleValue;
 }
-real Mainwindow::get_physical_memory_usage() {
-	win_ptr(MEMORYSTATUSEX, ret);
-	GlobalMemoryStatusEx(ret.get());
-	return static_cast<size>(ret->dwMemoryLoad / 1024) / 100.0;   //zapyta� si�, dzielenie bo zwroci jako l ca�k. wyswietlanie jako zmienny przecinek
-}
-real Mainwindow::get_core_number() {
-	win_nl(SYSTEM_INFO, ret);
-	GetSystemInfo(ret.get());
-	//ret.dwNumberOfProcessors;
-	return static_cast<size>(ret->dwNumberOfProcessors);
-}
-size Mainwindow::get_hz_per_core() {
-	win_nl(LARGE_INTEGER, ret);
-	QueryPerformanceFrequency(ret.get());
-	return static_cast<size>(ret->QuadPart); //suma first i second part  
-}
-real Mainwindow::cpu_usage() {
-	real ret{ 0.0 }; //bierze aktualne dane, po czasie 
-	FILETIME prevSysIdle, prevSysKernel, prevSysUser;
-	if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
-		return 0;
-	Sleep(15
-	);
-	FILETIME sysIdle, sysKernel, sysUser;
-	if (GetSystemTimes(&sysIdle, &sysKernel, &sysUser) == 0)
-		return 0;
-	if (prevSysIdle.dwLowDateTime != 0 && prevSysIdle.dwHighDateTime != 0) {
-		LONG sysIdleDiff, sysKernelDiff, sysUserDiff;
-		sysIdleDiff = substract_time(sysIdle, prevSysIdle);
-		sysKernelDiff = substract_time(sysKernel, prevSysKernel);
-		sysUserDiff = substract_time(sysUser, prevSysUser);
-		LONG sysTotal = sysKernelDiff + sysUserDiff;
-		LONG kernelTotal = sysKernelDiff - sysIdleDiff;
-		ret = (int)(((kernelTotal + sysUserDiff) * 100.0) / sysTotal);
-	}
-	return ret;
-}
+//size Mainwindow::get_physical_memory() {
+//	win_ptr(MEMORYSTATUSEX, ret);
+//	GlobalMemoryStatusEx(ret.get());
+//	return static_cast<size>(ret->ullTotalPhys / 1024);   //zapyta� si�
+//}
+//size Mainwindow::get_virtual_memory() {
+//	win_ptr(MEMORYSTATUSEX, ret);
+//	GlobalMemoryStatusEx(ret.get());
+//	return static_cast<size>(ret->ullTotalVirtual / 1024);   //zapyta� si�
+//}
+//size Mainwindow::get_avail_virtual_memory() {
+//	win_ptr(MEMORYSTATUSEX, ret);
+//	GlobalMemoryStatusEx(ret.get());
+//	return static_cast<size>(ret->ullAvailVirtual / 1024);   //zapyta� si�
+//}
+//real Mainwindow::get_physical_memory_usage() {
+//	win_ptr(MEMORYSTATUSEX, ret);
+//	GlobalMemoryStatusEx(ret.get());
+//	return static_cast<size>(ret->dwMemoryLoad / 1024) / 100.0;   //zapyta� si�, dzielenie bo zwroci jako l ca�k. wyswietlanie jako zmienny przecinek
+//}
+//size Mainwindow::get_hz_per_core() {
+//	win_nl(LARGE_INTEGER, ret);
+//	QueryPerformanceFrequency(ret.get());
+//	return static_cast<size>(ret->QuadPart); //suma first i second part  
+//}
+//real Mainwindow::cpu_usage() {
+//	real ret{ 0.0 }; //bierze aktualne dane, po czasie 
+//	FILETIME prevSysIdle, prevSysKernel, prevSysUser;
+//	if (GetSystemTimes(&prevSysIdle, &prevSysKernel, &prevSysUser) == 0)
+//		return 0;
+//	Sleep(15
+//	);
+//	FILETIME sysIdle, sysKernel, sysUser;
+//	if (GetSystemTimes(&sysIdle, &sysKernel, &sysUser) == 0)
+//		return 0;
+//	if (prevSysIdle.dwLowDateTime != 0 && prevSysIdle.dwHighDateTime != 0) {
+//		LONG sysIdleDiff, sysKernelDiff, sysUserDiff;
+//		sysIdleDiff = substract_time(sysIdle, prevSysIdle);
+//		sysKernelDiff = substract_time(sysKernel, prevSysKernel);
+//		sysUserDiff = substract_time(sysUser, prevSysUser);
+//		LONG sysTotal = sysKernelDiff + sysUserDiff;
+//		LONG kernelTotal = sysKernelDiff - sysIdleDiff;
+//		ret = (int)(((kernelTotal + sysUserDiff) * 100.0) / sysTotal);
+//	}
+//	return ret;
+//}
