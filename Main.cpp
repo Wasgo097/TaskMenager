@@ -25,17 +25,17 @@ int main(){
 	//cout << "Physical RAM => " << (float)statex.ullTotalPhys / (1024 * 1024 * 1024) << endl;
 	//system("PAUSE");
 	//return EXIT_SUCCESS;
-	MEMORYSTATUSEX memInfo;
-	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-	GlobalMemoryStatusEx(&memInfo);
-	DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
-	DWORDLONG freePhysMem = memInfo.ullAvailPhys;
-	DWORDLONG physMemUsed = totalPhysMem - freePhysMem;
-	cout << "Total: "<<totalPhysMem/1024/1024<<endl<<"Free: "<<freePhysMem/1024/1024<<endl<<"Used: "<<physMemUsed/1024/1024;
-	/*PROCESS_MEMORY_COUNTERS_EX pmc;
+	//MEMORYSTATUSEX memInfo;
+	//memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+	//GlobalMemoryStatusEx(&memInfo);
+	//DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
+	//DWORDLONG freePhysMem = memInfo.ullAvailPhys;
+	//DWORDLONG physMemUsed = totalPhysMem - freePhysMem;
+	//cout << "Total: "<<totalPhysMem/1024/1024<<endl<<"Free: "<<freePhysMem/1024/1024<<endl<<"Used: "<<physMemUsed/1024/1024<<endl;
+	PROCESS_MEMORY_COUNTERS_EX pmc;
 	GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PPROCESS_MEMORY_COUNTERS>(&pmc), sizeof(pmc));
 	SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
-	cout <<endl<<"Used by me: "<<physMemUsedByMe/1024/1024;*/
+	cout <<endl<<"Used by me: "<<physMemUsedByMe/1024/1024;
 	cin.ignore(1);
 	delete[]x;
 	return 0;

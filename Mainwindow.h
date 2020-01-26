@@ -13,14 +13,15 @@
 #include <map>
 #include <set>
 #include <algorithm>
-//#include <conio.h>
-//#include <stdio.h>
-//#include <tchar.h>
-//#include <iomanip>
-//#include <sstream>
-//#include <iostream>
-//#include <iphlpapi.h>
-
+#include <iomanip>
+#include <sstream>
+/*
+#include <conio.h>
+#include <stdio.h>
+#include <tchar.h>
+#include <iostream>
+#include <iphlpapi.h>
+*/
 //ram
 #include <psapi.h>
 //cpu
@@ -50,7 +51,8 @@ class Mainwindow{
 	Processes_info _process_sort;
 	PDH_HQUERY cpuQuery;
 	PDH_HCOUNTER cpuTotal;
-	void clear_string(string * str);
+	void clear_string(string * str); 
+	string format_double(const double src, const unsigned short precision = 2);
 	void remove_space(string * str);
 	/*
 	static ULONGLONG substract_time(const FILETIME one, const FILETIME two){
@@ -60,11 +62,6 @@ class Mainwindow{
 		b.LowPart = two.dwLowDateTime;
 		b.HighPart = two.dwHighDateTime;
 		return a.QuadPart - b.QuadPart;
-	}
-	string format_double(const double src, const unsigned short precision = 2){
-		std::stringstream stream;
-		stream << std::fixed << std::setprecision(precision) << src;
-		return stream.str();
 	}
 	*/
 public:
@@ -84,12 +81,14 @@ public:
 	void set_city(string city);
 	void set_process(string proc, bool procter);
 	void set_process_info(Processes_info x);
-	int get_core_number();
 	void init();
 	double getCurrentValue();
-	//size get_hz_per_core();
-	//real cpu_usage();	//size get_physical_memory();
+	int get_core_number();
+	double get_hz_per_core();
+	//real cpu_usage();	
+	//size get_physical_memory();
 	//size get_virtual_memory();
 	//size get_avail_virtual_memory();
 	//real get_physical_memory_usage();
 };
+HANDLE GetProcessByName(PCSTR name);

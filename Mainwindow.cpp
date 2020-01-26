@@ -1,6 +1,31 @@
 #include "Mainwindow.h"
 #include <SFML/Network.hpp>
 #include <iostream>
+HANDLE GetProcessByName(PCSTR name) {
+	DWORD pid = 0;
+	// Create toolhelp snapshot.
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32 process;
+	ZeroMemory(&process, sizeof(process));
+	process.dwSize = sizeof(process);
+	// Walkthrough all processes.
+	if (Process32First(snapshot, &process)) {
+		do {
+			// Compare process.szExeFile based on format of name, i.e., trim file path
+			// trim .exe if necessary, etc.
+			if (string(process.szExeFile) == string(name)) {
+				//std::cout << process.szExeFile << std::endl;
+				pid = process.th32ProcessID;
+				break;
+			}
+		} while (Process32Next(snapshot, &process));
+	}
+	CloseHandle(snapshot);
+	if (pid != 0)
+		return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	// Not found
+	return nullptr;
+}
 void Mainwindow::clear_string(string * str) {
 	size_t span = str->find("</span");
 	while (span < str->size()) {
@@ -9,6 +34,11 @@ void Mainwindow::clear_string(string * str) {
 	}
 	std::size_t found = str->find_first_not_of(' ');
 	str->erase(0, found);
+}
+string Mainwindow::format_double(const double src, const unsigned short precision) {
+	std::stringstream stream;
+	stream << std::fixed << std::setprecision(precision) << src;
+	return stream.str();
 }
 void Mainwindow::remove_space(string * str) {
 	size_t last_space = str->find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789");
@@ -123,11 +153,17 @@ void Mainwindow::draw_processes() {
 			//	pid = process.th32ProcessID;
 			//	break;
 			//}
-			all_processes.insert(process.szExeFile);
+			PROCESS_MEMORY_COUNTERS_EX pmc;
+			GetProcessMemoryInfo(GetProcessByName(process.szExeFile), reinterpret_cast<PPROCESS_MEMORY_COUNTERS>(&pmc), sizeof(pmc));
+			SIZE_T physMemUsedByMe = pmc.PrivateUsage;
+			if (physMemUsedByMe / 1024 / 1024 != 3276)
+				all_processes.insert(process.szExeFile + string(" ")+string("PID:")+std::to_string(process.th32ProcessID)+"  " + std::to_string(physMemUsedByMe / 1024 / 1024) + "MB");
+			else
+				all_processes.insert(process.szExeFile + string(" System process!"));
 			//std::cout << process.szExeFile << std::endl;
 		} while (Process32Next(snapshot, &process));
 	}
-	all_processes.erase("[System Process]");
+	all_processes.erase("[System Process] System process!");
 	string all;
 	int i = 0;
 	if (_process_sort.sort == Sort::asc) {
@@ -183,6 +219,9 @@ void Mainwindow::draw_weather() {
 			size_t cloudy = data.find("Cloudy");
 			size_t swallon_fog= data.find("Shallow Fog");
 			size_t haze = data.find("Haze");
+			size_t mist = data.find("Mist");
+			size_t sunny= data.find("Sunny");
+			size_t clear = data.find("Clear");
 			if (overcast <60) {
 				weather->weather_type = "Overcast\n";
 				size_t temp_on, temp_off;
@@ -292,6 +331,61 @@ void Mainwindow::draw_weather() {
 				string strong = data.substr(temp_on + 20, temp_off - temp_on - 20);
 				weather->wind_str = strong;
 			}
+			else if (mist < 60) {
+				weather->weather_type = "Mist\n";
+				size_t temp_on, temp_off;
+				temp_off = data.find("</span>");
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span>", temp_on);
+				weather->min_temp = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span>", temp_on);
+				string temperature = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				if (temperature.length() < 5) {
+					weather->max_temp = temperature;
+					temp_off = data.find("</span>", temp_off + 1);
+				}
+				else
+					weather->max_temp = weather->min_temp;
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span>", temp_on);
+				string direction;
+				direction = data.substr(temp_on + 19, temp_off - temp_on - 19);
+				weather->wind_dir = wind_dir[direction];
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span", temp_on);
+				string strong = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				weather->wind_str = strong;
+			}
+			else if (sunny < 120||clear<120) {
+				size_t temp_on, temp_off;
+				close = data.find("</span>");
+				open = data.find("<span", close);
+				string weather_type = data.substr(close + 7, open - close - 7);
+				clear_string(&weather_type);
+				weather->weather_type = weather_type;
+				temp_off = data.find("</span>", open + 1);
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span>", temp_on);
+				string temperature;
+				temperature = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				weather->min_temp = temperature;
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span", temp_on);
+				temperature = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				if (temperature.length() < 5) weather->max_temp = temperature;
+				else weather->max_temp = weather->min_temp;
+				//dir
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span", temp_on);
+				string direction;
+				direction = data.substr(temp_on + 19, temp_off - temp_on - 19);
+				weather->wind_dir = wind_dir[direction];
+				temp_on = data.find("<span", temp_off);
+				temp_off = data.find("</span", temp_on);
+				string strong = data.substr(temp_on + 20, temp_off - temp_on - 20);
+				weather->wind_str = strong;
+			}
 			else {
 				size_t temp_on, temp_off;
 				close = data.find("</span>");
@@ -343,54 +437,84 @@ void Mainwindow::draw_weather() {
 	_window->display();
 }
 void Mainwindow::kill_process() {
-	if (_process_terminate)_main_text.setString("Udalo sie zamknac proces " + _process);
-	else _main_text.setString("Nie udalo sie zamknac procesu " + _process);
+	/*if (_process_terminate)_main_text.setString("Udalo sie zamknac proces " + _process);
+	else _main_text.setString("Nie udalo sie zamknac procesu " + _process);*/
+	_main_text.setString("Function killing process");
 	_window->clear();
 	_window->draw(_background);
 	_window->draw(_main_text);
 	_window->display();
 }
 void Mainwindow::draw_memory() {
-	int i = 0;
+	const int maxsize = 300;
+	int xtemp = 0;
+	MEMORYSTATUSEX memInfo;
+	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+	sf::RectangleShape max;
+	max.setFillColor(sf::Color::Green);
+	max.setSize(sf::Vector2f(maxsize, 20));
+	max.setPosition(sf::Vector2f(10, 150));
+	sf::RectangleShape used;
+	used.setFillColor(sf::Color::Blue);
+	used.setPosition(sf::Vector2f(10, 180));
+	sf::RectangleShape free;
+	free.setFillColor(sf::Color::Yellow);
 	while (!_change) {
-		MEMORYSTATUSEX memInfo;
-		memInfo.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&memInfo);
 		DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
 		DWORDLONG freePhysMem = memInfo.ullAvailPhys;
 		DWORDLONG physMemUsed = totalPhysMem - freePhysMem;
+		xtemp = (float(physMemUsed) / float(totalPhysMem)) * maxsize;
+		used.setSize(sf::Vector2f(xtemp, 20));
+		free.setPosition(10 + xtemp, 180);
+		free.setSize(sf::Vector2f(maxsize - xtemp, 20));
 		string temp = "RAM resources:\n";
-		temp += "Total: " + std::to_string(totalPhysMem / 1024 / 1024) + " MB\n";
-		temp += "Free: " + std::to_string(freePhysMem / 1024 / 1024) + " MB\n";
-		temp += "Used: " + std::to_string(physMemUsed / 1024 / 1024) + " MB\n";
+		temp += "Total: " + std::to_string(totalPhysMem / 1024 / 1024) + " MB (green)\n";
+		temp += "Free: " + std::to_string(freePhysMem / 1024 / 1024) + " MB (yellow)\n";
+		temp += "Used: " + std::to_string(physMemUsed / 1024 / 1024) + " MB (blue)\n";
 		_main_text.setString(temp);
 		_window->clear();
 		_window->draw(_background);
+		_window->draw(max);
+		_window->draw(free);
+		_window->draw(used);
 		_window->draw(_main_text);
 		_window->display();
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		i++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
 	}
-	///
 }
 void Mainwindow::draw_cpu() {
 	init();
-	int i = 0;
+	const int maxsize = 300;
+	//int i = 0;
+	sf::RectangleShape max;
+	max.setFillColor(sf::Color::White);
+	max.setSize(sf::Vector2f(maxsize, 20));
+	max.setPosition(sf::Vector2f(10, 150));
+	sf::RectangleShape used;
+	used.setPosition(sf::Vector2f(10, 150));
 	while(!_change){
+		double cputemp = getCurrentValue();
+		used.setSize(sf::Vector2f(cputemp/100*maxsize, 20));
+		if(cputemp<20.0)used.setFillColor(sf::Color::Blue);
+		else if(cputemp>=20.0&&cputemp<50)used.setFillColor(sf::Color::Yellow);
+		else if(cputemp>=20.0&&cputemp<50)used.setFillColor(sf::Color::Magenta);
+		else used.setFillColor(sf::Color::Red);
 		string temp = "CPU resources:\n";
 		temp += "Number of cores: " + std::to_string(get_core_number()) + "\n";
-		temp += "CPU usage: " + std::to_string(getCurrentValue()) + " %\n";
-		std::cout << "";
-		//system("cls");
+		temp += "CPU speed: " + /*std::to_string(get_hz_per_core()/1000.0/1000.0)*/format_double(get_hz_per_core() / 1000.0 / 1000.0) + " GHz \n";
+		temp += "CPU usage: " + /*std::to_string(cputemp)*/format_double(cputemp)+ " %\n";
+		//std::cout << "";
 		_main_text.setString(temp);
 		_window->clear();
 		_window->draw(_background);
 		_window->draw(_main_text);
+		_window->draw(max);
+		_window->draw(used);
 		_window->display();
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		i++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		//i++;
 	}
-	///
 }
 void Mainwindow::draw_help() {
 	if (_help == Help::unknow) {
@@ -451,32 +575,19 @@ void Mainwindow::draw_help() {
 		_window->display();
 	}
 }
-bool Mainwindow::is_open() {
-	return _window->isOpen();
-}
+bool Mainwindow::is_open() {return _window->isOpen();}
 void Mainwindow::set_flag(Flag f) {
 	_change = true;
 	_flag = f;
 	weather.reset();
 }
-void Mainwindow::set_help(Help h) {
-	_help = h;
-}
-void Mainwindow::set_city(string city) {
-	this->_city = city;
-}
+void Mainwindow::set_help(Help h) {_help = h;}
+void Mainwindow::set_city(string city) {this->_city = city;}
 void Mainwindow::set_process(string proc, bool procter) {
 	_process = proc;
 	_process_terminate = procter;
 }
-void Mainwindow::set_process_info(Processes_info x) {
-	_process_sort = x;
-}
-int Mainwindow::get_core_number() {
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-	return sysinfo.dwNumberOfProcessors;
-}
+void Mainwindow::set_process_info(Processes_info x) {_process_sort = x;}
 void Mainwindow::init() {
 	PdhOpenQuery(NULL, NULL, &cpuQuery);
 	// You can also use L"\\Processor(*)\\% Processor Time" and get individual CPU values with PdhGetFormattedCounterArray()
@@ -488,6 +599,16 @@ double Mainwindow::getCurrentValue() {
 	PdhCollectQueryData(cpuQuery);
 	PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
 	return counterVal.doubleValue;
+}
+int Mainwindow::get_core_number() {
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
+}
+double Mainwindow::get_hz_per_core() {
+	LARGE_INTEGER ret;
+	QueryPerformanceFrequency(&ret);
+	return ret.QuadPart;
 }
 //size Mainwindow::get_physical_memory() {
 //	win_ptr(MEMORYSTATUSEX, ret);
@@ -508,11 +629,6 @@ double Mainwindow::getCurrentValue() {
 //	win_ptr(MEMORYSTATUSEX, ret);
 //	GlobalMemoryStatusEx(ret.get());
 //	return static_cast<size>(ret->dwMemoryLoad / 1024) / 100.0;   //zapyta� si�, dzielenie bo zwroci jako l ca�k. wyswietlanie jako zmienny przecinek
-//}
-//size Mainwindow::get_hz_per_core() {
-//	win_nl(LARGE_INTEGER, ret);
-//	QueryPerformanceFrequency(ret.get());
-//	return static_cast<size>(ret->QuadPart); //suma first i second part  
 //}
 //real Mainwindow::cpu_usage() {
 //	real ret{ 0.0 }; //bierze aktualne dane, po czasie 
